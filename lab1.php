@@ -1,216 +1,98 @@
-
 <?php
+  include_once 'DBConnector.php';
+  include_once 'User.php';
+  include_once 'FileUploader.php';
+  $con = new DBConnector;
 
-include_once 'DBConnector.php';
-include 'user.php';
-$con=new DBConnector;
+  if (isset($_POST['btn-save'])) {
+    $first_name = $_POST['first_name'];
+    $last_name = $_POST['last_name'];
+    $city = $_POST['city_name'];
+    $username = $_POST['username'];
+    $password = $_POST['password'];
 
-if(isset($_POST['btn-save']))
-{
-
-   $first_name=$_POST['first_name'];
-   $last_name=$_POST['last_name'];
-   $city=$_POST['city_name'];
-   $username=$_POST['username'];
-   $password=$_POST['password'];
-   $user=new User($first_name,$last_name,$city,'',$username,$password);
-
-
-    
-
-
-
-
-
-
+    $user = new User($first_name, $last_name, $city, $username, $password);
     if (!$user->validateForm()) {
-     $user->createFormErrorSessions();
-     header("Refresh:0");
-     die();
-    }
-    else if($user->isUserExist()){
-      session_start();
-      echo "Username has already been taken";
-      header("Refresh:0");
-     die();
-      // echo "Username has already been taken";
+        $user->createFormErrorSessions();
+        header("Refresh:0");
+        die();
+    } elseif ($user->isUserExist($con->conn)) {
+        session_start();
+        $_SESSION['username'] = "Username taken.";
+        header("Refresh: 0");
+        die();
     }
 
+    $uploader = new FileUploader();
+    $uploader->uploadFile();
+    $target_file = $uploader->target_file;
+    $res = $user->save($con->conn, $target_file);
 
-    $res=$user->save();
-  if($res){
-	echo "Save operation was successfull";
-	
+    if ($res) {
+      echo "Save operation successful!";
+      if ($uploader->isUploadOk()){
+          echo "Image uploaded";
+      } else {
+          echo "Not uploaded";
+      }
+    } else {
+      echo "An error occurred!";
     }
-else
-{echo "An error occured!";}
-
-}
-
-
-
-
-
-//Code to be added after disabling js
-// <tr>
-//   <div id="form-errors">
-//   php
-//    session_start();
-//    if(!empty($_SESSION['form_errors'])){
-//     echo "".$_SESSION['form_errors'];
-//     unset($_SESSION['form_errors']);
-//    }
-//  php
-//  </div>
-//  </td>
-//  </tr>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  }
 ?>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <html>
   <head>
-  	<title>Title goes here</title>
+    <title>New User</title>
     <script type="text/javascript" src="validate.js"></script>
     <link rel="stylesheet" type="text/css" href="validate.css">
   </head>
- <body>
- 	<form method="post" name="user_details" id="user_details" onsubmit="return validateForm()" action="<?=$_SERVER['PHP_SELF']?>">
- 		<table align="centre">
-     
- <tr>
-  <div id="form-errors">
-   <?php
-    session_start();
-    if(!empty($_SESSION['form_errors'])){
-     echo "".$_SESSION['form_errors'];
-     unset($_SESSION['form_errors']);
-    }
-  ?>
-  </div>
-  </td>
-  </tr>
-
-
-
-
-
-
-           <tr>
-           <td><input type="text" name="first_name" required="" placeholder="First Name"/></td>
-           </tr>
-
-  	       <tr>
-           <td><input type="text" name="last_name" placeholder="Last Name"/></td>
-           </tr>
-
+  <body>
+    <form name="user_details" id="user_details" enctype="multipart/form-data" method="post" action=<?=$_SERVER['PHP_SELF'] ?> onsubmit="return validateForm()">
+        <table align="center">
             <tr>
-           <td><input type="text" name="city_name" placeholder="city"/></td>
-           </tr>
+                <div id="form-errors">
+                    <?php
+                        session_start();
+                        if (!empty($_SESSION['form-errors'])) {
+                            echo $_SESSION["form-errors"];
+                            unset($_SESSION['form-errors']);
+                        }
+
+                        if (!empty($_SESSION['username'])) {
+                            echo $_SESSION['username'];
+                            unset($_SESSION['username']);
+                        }
+                    ?>
+                </div>
+            </tr>
+            <tr>
+                <td><input type="text" name="first_name" placeholder="First Name" required/></td>
+            </tr>
+            <tr>
+                <td><input type="text" name="last_name" placeholder="Last Name" /></td>
+            </tr>
+            <tr>
+                <td><input type="text" name="city_name" placeholder="City" /></td>
+            </tr>
+            <tr>
+                <td><input type="text" name="username" placeholder="Username"></td>
+            </tr>
+            <tr>
+                <td><input type="password" name="password" placeholder="Password"></td>
+            </tr>
+            <tr>
+                <td>Profile Image: <input type="file" name="fileToUpload" id="fileToUpload"></td>
+            </tr>
+            <tr>
+                <td><button type="submit" name="btn-save"><strong>SAVE</strong></button></td>
+            </tr>
+            <tr>
+                <td><a href="login.php">Log In</a> </td>
+            </tr>
+    </table>
+    </form>
+  </body>
+      <a href="all-records.php">Show All Records</a>
 
 
-           <tr>
-           <td><input type="text" name="username" placeholder="Username"/></td>
-           </tr>
-     
-
-          <tr>
-           <td><input type="password" name="password" placeholder="Password"/></td>
-           </tr>
-
-
-
-
-           <tr>
-           	<td><button type="submit" name="btn-save"><strong>SAVE</strong></button></td>
-
-           </tr>
-
-            
-    
-           
-<!--  -->
-
-
-
-
-
-
-
-
-
-
-
-
-
-         </table>
-<!--          <button type="submit" name="btn-show"><strong><a href="displayrecords.php">Show All Records</a></strong></button> -->
-      </form>
-       <button type="submit" name="btn-show"><strong><a href="displayrecords.php">Show All Records</a></strong></button>
-   </body>  
 </html>
